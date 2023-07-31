@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Информационно-справочная система автопроката</title>
+  <!--  Импорт библиотеки для рисования диаграммы-->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
+  <!--  Импорт библиотеки готовыхс css стилей bootstrap-->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+
+</head>
+<body>
+<!--основной контейнер div, в котором хранятся все элементы страницы-->
+<div class="bg-image"
+     style="background-image:url('../images/sad.jpg'); height: 100vh; overflow-x: hidden;">
+  <blockquote class="blockquote text-center"><h1>Информационно-справочная система автопроката</h1></blockquote>
+  <!--    div контейнер, в котором хранятся элементы панели навигации-->
+  <div class="container">
+    <header class="d-flex justify-content-center py-3">
+      <ul class="nav nav-pills">
+        <!--кнопка для перехода на главную страницу-->
+        <li class="nav-item"><a th:href="@{'/'}" class="nav-link active" aria-current="page" style="background-color: black">Главная</a></li>
+        <!--кнопка для перехода на страницу "об авторе"-->
+        <li class="nav-item"><a th:href="@{'/about'}" class="nav-link" style="color: #ffffff">Об авторе</a></li>
+      </ul>
+    </header>
+  </div>
+  <div style="height: 400px; overflow: auto;">
+    <!--таблица с информацией об объектах автомобилей.-->
+    <table id="table1" class="table table-hover table-dark">
+      <thead>
+      <!--строка с поисками по всем критериям-->
+      <tr>
+        <th></th>
+        <!--поиск по идентификатору автомобиля.-->
+        <th><form th:action="@{/search_session}">
+          <input type="text" name="keywordCarId" id="keywordCarId" size="15" th:value="${keywordCarId}" required/>
+          <input type="submit" class="btn btn-dark btn-sm" value="Поиск"/>
+          <input type="button" class="btn btn-light btn-sm" value="Очистить" id="btnClearCarId"
+                 onclick="clearSearch()"/>
+        </form></th>
+        <!--поиск по ФИО клмента.-->
+        <th><form th:action="@{/search_session}">
+          <input type="text" name="keywordClientName" id="keywordClientName" size="15" th:value="${keywordClientName}" required/>
+          <input type="submit" class="btn btn-dark btn-sm" value="Поиск"/>
+          <input type="button" class="btn btn-light btn-sm" value="Очистить" id="btnClearClientName"
+                 onclick="clearSearch()"/>
+        </form></th>
+        <!--поиск по дате начала сессии проката.-->
+        <th><form th:action="@{/search_session}">
+          <input type="text" name="keywordStartDate" id="keywordStartDate" size="15" th:value="${keywordStartDate}" required/>
+          <input type="submit" class="btn btn-dark btn-sm" value="Поиск"/>
+          <input type="button" class="btn btn-light btn-sm" value="Очистить" id="btnClearStartDate"
+                 onclick="clearSearch()"/>
+        </form></th>
+        <!--поиск по дате конца сессии проката.-->
+        <th><form th:action="@{/search_session}">
+          <input type="text" name="keywordEndDate" id="keywordEndDate" size="15" th:value="${keywordEndDate}" required/>
+          <input type="submit" class="btn btn-dark btn-sm" value="Поиск"/>
+          <input type="button" class="btn btn-light btn-sm" value="Очистить" id="btnClearEndDate"
+                 onclick="clearSearch()"/>
+        </form></th>
+        <!--поиск по цене сессии.-->
+        <th><form th:action="@{/search_session}">
+          <input type="text" name="keywordSessionCost" id="keywordSessionCost" size="15" th:value="${keywordSessionCost}" required/>
+          <input type="submit" class="btn btn-dark btn-sm" value="Поиск"/>
+          <input type="button" class="btn btn-light btn-sm" value="Очистить" id="btnClearSessionCost"
+                 onclick="clearSearch()"/>
+        </form></th>
+        <th></th>
+      </tr>
+      <!--строка с названиями параметров.-->
+      <tr>
+        <th scope="col">ID сессии</th>
+        <th scope="col">ID автомобиля</th>
+        <th scope="col">ФИО клиента</th>
+        <th scope="col">Дата начала проката</th>
+        <th scope="col">Дата конца проката</th>
+        <th scope="col">Стоимость проката</th>
+        <th scope="col">Действия</th>
+      </tr>
+      </thead>
+      <tbody>
+      <!--проход по всем объектам полученными для отображения и добавление их в таблицу.-->
+      <tr th:each="rSession: ${listSessions}">
+        <th scope="row" class="text-white" th:text="${rSession.id}">ID сессии отсутствует</th>
+        <th scope="row" class="text-white" th:text="${rSession.car_id}">ID автомобиля отсутствует</th>
+        <th scope="row" class="text-white" th:text="${rSession.client_name}">ФИО клиента отсутствует</th>
+        <th scope="row" class="text-white" th:text="${rSession.start_date}">Дата начала проката отсутствует</th>
+        <th scope="row" class="text-white" th:text="${rSession.end_date}">Дата конца проката отсутствует</th>
+        <th scope="row" class="text-white" th:text="${rSession.cost}">Стоимость проката отсутствует</th>
+        <!--столбец с кнопками для удаления и редактирования записей таблицы-->
+        <td>
+          <a th:href="@{'/edit_session/'+${rSession.id}}"><button type="button" class="btn btn-outline-light">Редактировать</button></a>
+          <a th:href="@{'/delete_session/'+${rSession.id}}"><button type="button" class="btn btn-outline-danger">Удалить</button></a>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="text-white" style="font-size: 25px; background-color: rgba(40,40,40,0.5); width: 25%">
+    <!--функция для вывода информации о количестве элементов в таблице-->
+    <script type="text/javascript">
+      function getRowsColumn() {
+        //получаем таблицу по id
+        let table = document.getElementById('table1')
+        //получаем тело таблицы
+        let tBody = table.querySelector('tbody')
+        //получаем количество всех строк
+        const count = tBody.querySelectorAll('tr').length;
+        document.write('Количество сессий в таблице: ' + count)
+      }
+      getRowsColumn()
+    </script>
+  </p>
+  <!--кнопка для добавления сессии-->
+  <blockquote class="blockquote text-center">
+    <a href="/new_session">
+      <button type="button" class="btn btn-dark" data-togge="button" aria-pressed="false" autocomplete="off">
+        Добавить сессию
+      </button>
+    </a>
+  </blockquote>
+  <div style="height: 400px; overflow: auto;">
+    <div class="table-responsive">
+      <!--таблица с информацией об объектах сессий проката.-->
+      <table id="table2" class="table table-hover table-dark table-sm" cellspacing="0"
+             width="100%">
+        <thead>
+        <!--строка с полями поиска по всеми критериям-->
+        <tr class="position-sticky">
+          <th class="th-sm"></th>
+          <!--поиск по полю марки автомобиля.-->
+          <th class="th-sm"><form th:action="@{/search_car}">
+            <input type="text" name="keywordBrand" id="keywordBrand" size="15" th:value="${keywordBrand}" required/>
+            <input type="submit" class="btn btn-dark btn-sm" value="Поиск"/>
+            <input type="button" class="btn btn-light btn-sm" value="Очистить" id="btnClearBrand"
+                   onclick="clearSearch()"/>
+          </form></th>
+          <!--поиск по полю модели автомобиля.-->
+          <th class="th-sm"><form th:action="@{/search_car}">
+            <input type="text" name="keywordModel" id="keywordModel" size="15" th:value="${keywordModel}" required/>
+            <input type="submit" class="btn btn-dark btn-sm" value="Поиск"/>
+            <input type="button" class="btn btn-light btn-sm" value="Очистить" id="btnClearModel"
+                   onclick="clearSearch()"/>
+          </form></th>
+          <!--поиск по государственному номеру автомобиля.-->
+          <th class="th-sm"><form th:action="@{/search_car}">
+            <input type="text" name="keywordGosn" id="keywordGosn" size="15" th:value="${keywordGosn}" required/>
+            <input type="submit" class="btn btn-dark btn-sm" value="Поиск"/>
+            <input type="button" class="btn btn-light btn-sm" value="Очистить" id="btnClearGosn"
+                   onclick="clearSearch()"/>
+          </form></th>
+          <!--поиск по полю года производства.-->
+          <th class="th-sm"><form th:action="@{/search_car}">
+            <input type="text" name="keywordProdYear" id="keywordProdYear" size="15" th:value="${keywordProdYear}" required/>
+            <input type="submit" class="btn btn-dark btn-sm" value="Поиск"/>
+            <input type="button" class="btn btn-light btn-sm" value="Очистить" id="btnClearProdYear"
+                   onclick="clearSearch()"/>
+          </form></th>
+          <!--поиск по полю пробега.-->
+          <th class="th-sm"><form th:action="@{/search_car}">
+            <input type="text" name="keywordMileage" id="keywordMileage" size="15" th:value="${keywordMileage}" required/>
+            <input type="submit" class="btn btn-dark btn-sm" value="Поиск"/>
+            <input type="button" class="btn btn-light btn-sm" value="Очистить" id="btnClearMileage"
+                   onclick="clearSearch()"/>
+          </form></th>
+          <!--поиск по полю доступности автомобиля для проката.-->
+          <th class="th-sm"><form th:action="@{/search_car}">
+            <input type="text" name="keywordIsFree" id="keywordIsFree" size="15" th:value="${keywordIsFree}" required/>
+            <input type="submit" class="btn btn-dark btn-sm" value="Поиск"/>
+            <input type="button" class="btn btn-light btn-sm" value="Очистить" id="btnClearIsFree"
+                   onclick="clearSearch()"/>
+          </form></th>
+          <th class="th-sm"></th>
+        </tr>
+        <!--строка с заголовками таблицы-->
+        <tr>
+          <th scope="col">ID автомобиля</th>
+          <th scope="col">Бренд</th>
+          <th scope="col">Модель</th>
+          <th scope="col">Гос номер</th>
+          <th scope="col">Год производства</th>
+          <!--сортировка по нажатию на заголовок-->
+          <th scope="col" onclick="sortTable()">Пробег</th>
+          <th scope="col">Доступен</th>
+          <th scope="col">Действия</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!--проход по объектам автомобилей для оторбражения и добавление их в таблицу-->
+        <tr th:each="car: ${listCars}">
+          <th scope="row" class="text-white" th:text="${car.id}">ID автомобиля отсутствует</th>
+          <th scope="row" class="text-white" th:text="${car.brand}">Бренд автомобиля отсутствует</th>
+          <th scope="row" class="text-white" th:text="${car.model}">Модель автомобиля отсутствует</th>
+          <th scope="row" class="text-white" th:text="${car.gosn}">Гос номер отсутствует</th>
+          <th scope="row" class="text-white" th:text="${car.prod_year}">Год производства отсутствует</th>
+          <th scope="row" class="text-white" th:text="${car.mileage}">Пробег отсутствует</th>
+          <th scope="row" class="text-white" th:text="${car.is_free}">Доступность автомобиля отсутствует</th>
+          <!--столбец с кнопками для редактирования и удаления записей в таблице-->
+          <td>
+            <a th:href="@{'/edit_car/'+${car.id}}"><button type="button" class="btn btn-outline-light">Редактировать</button></a>
+            <a th:href="@{'/delete_car/'+${car.id}}"><button type="button" class="btn btn-outline-danger">Удалить</button></a>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="text-white" style="font-size: 25px; background-color: rgba(40,40,40,0.5); width: 25%">
+    <!--функция для вывода информации о количестве элементов в таблице-->
+    <script type="text/javascript">
+      function getRowsColumn() {
+        //получаем таблицу по id
+        let table = document.getElementById('table2')
+        //получаем тело таблицы
+        let tBody = table.querySelector('tbody')
+        //получаем количество строк в таблице
+        const count = tBody.querySelectorAll('tr').length;
+        document.write('Количество автомобилей в таблице: ' + count)
+      }
+      getRowsColumn()
+    </script>
+  </p>
+  <blockquote class="blockquote text-center">
+    <!--кнопка для добавления автомобиля-->
+    <a href="/new_car">
+      <button type="button" class="btn btn-dark" data-togge="button" aria-pressed="false" autocomplete="off">
+        Добавить автомобиль
+      </button>
+    </a>
+  </blockquote>
+  <canvas id="myChart"></canvas>
+</div>
+
+<script type="text/javascript">
+  //функция для очистки полей поиска посредством перехода на главную страницу
+  function clearSearch() {
+    window.location = "[[@{/}]]";
+  }
+  //функция для сортировки таблицы автомобилей по полю пробега
+  function sortTable() {
+    // Получаем заголовок колонки "Пробег"
+    const table = document.getElementById("table2");
+    const mileage = table.querySelector('tr:nth-child(2) th:nth-child(6)')
+    // Получаем все строки таблицы
+    const rows = Array.from(table.querySelectorAll('tbody tr'));
+
+    // Определяем порядок сортировки (возрастание или убывание)
+    const ascending = mileage.dataset.order === 'asc';
+
+    // Сортируем строки таблицы в соответствии с выбранным порядком
+    const sortedRows = rows.sort((a, b) => {
+      const aValue = a.cells[5].textContent;
+      const bValue = b.cells[5].textContent;
+      return ascending ? aValue - bValue : bValue - aValue;
+    });
+
+    // Поменяем порядок строк в таблице
+    const tbody = table.querySelector('tbody');
+    sortedRows.forEach(row => tbody.insertBefore(row, null));
+
+    // Изменяем порядок сортировки при повторном клике на заголовке колонки
+    mileage.dataset.order = ascending ? 'desc' : 'asc';
+    mileage.textContent = "Пробег " + (ascending ? "▲" : "▼");
+  }
+</script>
+<!--вывод диаграммы для отображения количества сессий по месяцам-->
+<script type="text/javascript">
+  // Получаем ссылку на таблицу
+  var table = document.getElementById('table1');
+  const rows = table.rows;
+  //реализуем сортировку дат
+  sortedDates = [];
+  for (let k = 2; k < rows.length; k++){
+    sortedDates.push(rows[k].cells[3].textContent)
+  }
+  sortedDates.sort();
+  const data = {};
+  //цикл для заполнения словаря с месяцами и количеством сессий на этот месяц
+  for (let i = 0; i < sortedDates.length; i++) {
+    const date = new Date(sortedDates[i]);
+    const month = date.getMonth();
+    const year = date.getFullYear();
+    const key = `${month}-${year}`;
+    // Если месяц еще не встречался, создаем новый элемент в объекте data
+    if (!data[key]) {
+      data[key] = 1;
+    } else {
+      // Иначе увеличиваем значение для этого месяца
+      data[key]++;
+    }
+  }
+  //создаём массив месяцев с их полными названиями на русском языке
+  const labels = Object.keys(data).map(key => {
+    const [month, year] = key.split("-");
+    const date = new Date(2000, month);
+    const monthName = date.toLocaleString('default', { month: 'long' });
+    return `${monthName} ${year}`;
+  });
+  const values = Object.values(data);
+
+  // Создаем гистограмму с помощью библиотеки Chart.js
+  var ctx = document.getElementById("myChart");
+  var chart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: [{
+        label: "Количество записей",
+        data: values,
+        backgroundColor: "rgba(0,0,0,0.65)"
+      }]
+    },
+    options: {
+      scales: {
+        yAxes: [{
+          ticks: {
+            beginAtZero: true
+          }
+        }]
+      }
+    }
+  });
+</script>
+</body>
+</html>
